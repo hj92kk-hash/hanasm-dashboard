@@ -31,6 +31,10 @@ h1{font-size:22px}
 .tabs{display:flex;gap:6px}
 .tab{font-size:12.5px;font-weight:700;border:1px solid #cbd5e1;background:#fff;color:#475569;border-radius:7px;padding:5px 12px;cursor:pointer}
 .tab.on{background:#1e293b;color:#fff;border-color:#1e293b}
+.datenav{display:flex;align-items:center;gap:6px;font-size:13px;color:#64748b}
+.datenav button{font-size:13px;font-weight:700;border:1px solid #cbd5e1;background:#fff;border-radius:6px;padding:4px 9px;cursor:pointer}
+.datenav button#todayBtn{background:#1e293b;color:#fff;border-color:#1e293b}
+.datenav input[type=date]{font-size:13px;border:1px solid #cbd5e1;border-radius:6px;padding:4px 6px}
 #todayPanel{border:2px solid #dc2626}
 .tbadge{font-size:12px;font-weight:800;background:#dc2626;color:#fff;border-radius:7px;padding:3px 10px}
 .ttbl{width:100%;border-collapse:collapse;font-size:13px}
@@ -57,6 +61,12 @@ td.hl{background:#fff7d6}
 .it.hl{background:#fde68a;border-radius:3px}
 .it::before{content:'';position:absolute;left:0;top:4px;width:6px;height:6px;border-radius:1px;background:var(--c)}
 .vn2{font-weight:800}.pq{color:#475569}.pq b{color:#0f172a;font-weight:800}
+.it.done{opacity:.5}.it.done .vn2{text-decoration:line-through}
+.donebadge{font-size:10px;font-weight:800;background:#16a34a;color:#fff;border-radius:8px;padding:1px 7px;margin-left:4px}
+.partbadge{font-size:10px;font-weight:800;background:#64748b;color:#fff;border-radius:8px;padding:1px 6px;margin-left:4px}
+td.alldone{background:#f0fdf4}
+.ttbl tr.done td{opacity:.55}.ttbl tr.done .vn{text-decoration:line-through}
+.stchip{display:inline-block;font-size:10px;font-weight:800;border-radius:5px;padding:1px 6px;color:#fff}
 .foot{font-size:11px;color:#94a3b8;text-align:center;margin-top:14px}
 @media print{@page{size:A4 landscape;margin:8mm}body{background:#fff}.wrap{max-width:none;padding:0}
  #printbtn,.foot,.searchbox,.checkin{display:none}.panel{box-shadow:none}
@@ -80,14 +90,22 @@ td.hl{background:#fff7d6}
 </header>
 
 <div class="panel" id="todayPanel">
-  <div class="ptitle"><span>✅ 오늘 출고 체크리스트 <span class="tbadge" id="todayDate"></span></span>
-     <span id="todaySum" style="font-size:13px;color:#64748b"></span></div>
+  <div class="ptitle">
+    <span>✅ 출고 체크리스트 <span class="tbadge" id="todayDate"></span></span>
+    <span class="datenav">
+      <button id="prevD" title="이전 날">◀</button>
+      <input type="date" id="datePick">
+      <button id="nextD" title="다음 날">▶</button>
+      <button id="todayBtn">오늘</button>
+      <span id="todaySum"></span>
+    </span>
+  </div>
   <div id="todayBox"></div>
 </div>
 
 <div class="panel">
   <div class="ptitle"><span>출고 달력 (월~금)</span><div class="tabs" id="monthTabs"></div></div>
-  <div class="legend"><span><i style="background:#2563eb"></i>슬림디자인</span><span><i style="background:#059669"></i>슬림업</span><span><i style="background:#7c3aed"></i>강화유리</span><span><i style="background:#d97706"></i>인포</span></div>
+  <div class="legend"><span><i style="background:#2563eb"></i>슬림디자인</span><span><i style="background:#059669"></i>슬림업</span><span><i style="background:#7c3aed"></i>강화유리</span><span><i style="background:#d97706"></i>인포</span> &nbsp;|&nbsp; <span><i style="background:#16a34a"></i>출고완료</span></div>
   <div id="calBox"></div>
 </div>
 <div class="foot">하나사인몰 웹팀 · 자동 생성 대시보드</div>
@@ -104,21 +122,35 @@ const now=new Date();
 const todayKey=now.getFullYear()+'-'+pad(now.getMonth()+1)+'-'+pad(now.getDate());
 const WK=['일','월','화','수','목','금','토'];
 
-// ---- TODAY ----
-document.getElementById('todayDate').textContent=(now.getMonth()+1)+'/'+now.getDate()+' ('+WK[now.getDay()]+')';
-const rows=DET[todayKey]||[];
-const tq=rows.reduce((s,r)=>s+(+r.qty||0),0);
-if(rows.length){
-  document.getElementById('todaySum').textContent='총 '+rows.length+'건 · '+tq+'개';
-  let h='<table class="ttbl"><thead><tr><th class="ck">✓</th><th>업체명</th><th>상품</th><th>사이즈</th><th class="qty">수량</th><th>배송</th><th>연락처</th><th>주소</th></tr></thead><tbody>';
-  rows.forEach(r=>{const c=COL[r.product]||'#475569';
-    h+='<tr><td class="ck"><input type="checkbox"></td><td class="vn">'+esc(r.vendor)+'</td>'+
-       '<td><span class="chip" style="background:'+c+'">'+esc(SHORT[r.product]||r.product)+'</span></td>'+
-       '<td>'+esc(r.size||'-')+'</td><td class="qty">'+esc(r.qty)+'</td><td>'+esc(r.ship||'-')+'</td>'+
-       '<td style="white-space:nowrap">'+esc(r.tel||'-')+'</td><td>'+esc(r.addr||'-')+'</td></tr>'});
-  h+='</tbody></table>';
-  document.getElementById('todayBox').innerHTML=h;
-}else document.getElementById('todayBox').innerHTML='<div class="none">오늘('+todayKey+') 출고 예정 건이 없습니다.</div>';
+// ---- CHECKLIST (date navigable) ----
+let selDate=todayKey;
+function renderChecklist(key){
+  selDate=key;
+  const[Y,M,D]=key.split('-').map(Number);const dObj=new Date(Y,M-1,D);
+  const isToday=key===todayKey;
+  document.getElementById('todayDate').textContent=M+'/'+D+' ('+WK[dObj.getDay()]+')'+(isToday?' · 오늘':'');
+  document.getElementById('datePick').value=key;
+  const rows=DET[key]||[];const tq=rows.reduce((s,r)=>s+(+r.qty||0),0);
+  if(rows.length){
+    const dn=rows.filter(r=>r.done).length;document.getElementById('todaySum').innerHTML='총 '+rows.length+'건 · '+tq+'개 <span style="color:#16a34a;font-weight:700">(완료 '+dn+')</span>';
+    let h='<table class="ttbl"><thead><tr><th class="ck">✓</th><th>상태</th><th>업체명</th><th>상품</th><th>사이즈</th><th class="qty">수량</th><th>배송</th><th>연락처</th><th>주소</th></tr></thead><tbody>';
+    rows.forEach(r=>{const c=COL[r.product]||'#475569';
+      const st=r.done?'<span class="stchip" style="background:#16a34a">출고완료</span>':'<span class="stchip" style="background:#dc2626">대기</span>';
+      h+='<tr class="'+(r.done?'done':'')+'"><td class="ck"><input type="checkbox"'+(r.done?' checked':'')+'></td><td>'+st+'</td><td class="vn">'+esc(r.vendor)+'</td>'+
+         '<td><span class="chip" style="background:'+c+'">'+esc(SHORT[r.product]||r.product)+'</span></td>'+
+         '<td>'+esc(r.size||'-')+'</td><td class="qty">'+esc(r.qty)+'</td><td>'+esc(r.ship||'-')+'</td>'+
+         '<td style="white-space:nowrap">'+esc(r.tel||'-')+'</td><td>'+esc(r.addr||'-')+'</td></tr>'});
+    h+='</tbody></table>';
+    document.getElementById('todayBox').innerHTML=h;
+  }else document.getElementById('todayBox').innerHTML='<div class="none">'+M+'/'+D+' 출고 예정 건이 없습니다.</div>';
+}
+function shiftDate(delta){const[Y,M,D]=selDate.split('-').map(Number);const d=new Date(Y,M-1,D);d.setDate(d.getDate()+delta);
+  renderChecklist(d.getFullYear()+'-'+pad(d.getMonth()+1)+'-'+pad(d.getDate()))}
+document.getElementById('prevD').onclick=()=>shiftDate(-1);
+document.getElementById('nextD').onclick=()=>shiftDate(1);
+document.getElementById('todayBtn').onclick=()=>renderChecklist(todayKey);
+document.getElementById('datePick').onchange=function(){if(this.value)renderChecklist(this.value)};
+renderChecklist(todayKey);
 
 // ---- vendor index for search ----
 const VEND={}; // vendor -> [{date,qty}]
@@ -179,9 +211,11 @@ function renderCal(hlDate){
     for(let i=0;i<5;i++){const day=cells[w*7+i];
       if(!day){html+='<td class="empty"></td>';continue}
       const key=y+'-'+pad(m)+'-'+pad(day);const cls=(key===todayKey?'today ':'')+(key===hlDate?'hl':'');
-      if(AGG[key]){const d=AGG[key];let c='<td class="'+cls.trim()+'"><div class="dn"><span>'+day+'</span><span class="cnt">'+d.total+'건</span></div>';
+      if(AGG[key]){const d=AGG[key];const tdcls=(cls+(d.all_done?' alldone':'')).trim();
+        let badge=d.all_done?'<span class="donebadge">✓완료</span>':(d.done>0?'<span class="partbadge">완료 '+d.done+'/'+d.total+'</span>':'');
+        let c='<td class="'+tdcls+'"><div class="dn"><span>'+day+'</span><span>'+badge+'<span class="cnt">'+d.total+'건</span></span></div>';
         d.vendors.forEach(v=>{const pc=COL[v.products[0].name]||'#475569';const pl=v.products.map(p=>(SHORT[p.name]||p.name)+'<b>'+p.qty+'</b>').join(' ');
-          c+='<div class="it" style="--c:'+pc+'"><span class="vn2">'+esc(v.vendor)+'</span> <span class="pq">'+pl+'</span></div>'});
+          c+='<div class="it'+(v.done?' done':'')+'" style="--c:'+pc+'"><span class="vn2">'+esc(v.vendor)+'</span> <span class="pq">'+pl+'</span></div>'});
         c+='</td>';html+=c;
       }else html+='<td class="'+cls.trim()+'"><div class="dn"><span>'+day+'</span></div></td>';
     }html+='</tr>';}
