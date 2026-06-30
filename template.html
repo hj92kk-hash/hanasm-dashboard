@@ -68,6 +68,16 @@ td.alldone{background:#f0fdf4}
 .ttbl tr.done td{opacity:.55}.ttbl tr.done .vn{text-decoration:line-through}
 .stchip{display:inline-block;font-size:10px;font-weight:800;border-radius:5px;padding:1px 6px;color:#fff}
 .foot{font-size:11px;color:#94a3b8;text-align:center;margin-top:14px}
+.ovl{position:fixed;inset:0;background:rgba(15,23,42,.55);display:flex;align-items:center;justify-content:center;z-index:100;padding:20px}
+.modal{background:#fff;border-radius:14px;padding:24px;width:380px;max-width:92vw;box-shadow:0 10px 40px rgba(0,0,0,.3)}
+.modal h2{font-size:18px;margin-bottom:6px}
+.modal p{font-size:13px;color:#64748b;margin-bottom:16px}
+.modal .dev{font-weight:800;color:#0f172a}
+.chips{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:14px}
+.chips button{font-size:14px;font-weight:700;border:1.5px solid #cbd5e1;background:#fff;color:#0f172a;border-radius:9px;padding:9px 14px;cursor:pointer}
+.chips button:hover{border-color:#1e293b;background:#f8fafc}
+.modal .ni{width:100%;font-size:14px;padding:10px 12px;border:1.5px solid #cbd5e1;border-radius:9px;margin-bottom:14px}
+.modal .ok{width:100%;font-size:15px;font-weight:800;border:none;border-radius:9px;padding:11px;background:#1e293b;color:#fff;cursor:pointer}
 @media print{@page{size:A4 landscape;margin:8mm}body{background:#fff}.wrap{max-width:none;padding:0}
  #printbtn,.foot,.searchbox,.checkin{display:none}.panel{box-shadow:none}
  table.cal{height:165mm}table.cal td{height:auto}}
@@ -109,6 +119,7 @@ td.alldone{background:#f0fdf4}
   <div id="calBox"></div>
 </div>
 <div class="foot">하나사인몰 웹팀 · 자동 생성 대시보드</div>
+<div class="ovl" id="nameOvl" style="display:none"><div class="modal"><h2>👋 확인자 이름을 입력하세요</h2><p><span class="dev" id="mDev"></span> 로 접속하셨습니다. 출고 확인 담당자 이름을 선택하거나 입력해 주세요.</p><div class="chips" id="mChips"></div><input class="ni" id="mInput" type="text" placeholder="직접 입력 (예: 홍길동)"><button class="ok" id="mOk">확인하고 시작</button></div></div>
 </div>
 <script>
 const AGG=__AGG__;
@@ -190,6 +201,21 @@ function renderCheckin(){
   };
 }
 renderCheckin();
+// ---- first-visit name modal ----
+(function(){
+  const saved=JSON.parse(localStorage.getItem('checkin_'+devKey)||'null');
+  if(saved&&saved.name)return;
+  const ovl=document.getElementById('nameOvl');
+  document.getElementById('mDev').textContent=devLabel;
+  document.getElementById('mChips').innerHTML=TEAM.map(n=>'<button data-n="'+n+'">'+n+'</button>').join('');
+  ovl.style.display='flex';
+  function save(name){if(!name||!name.trim())return;
+    const rec={name:name.trim(),time:(now.getMonth()+1)+'/'+now.getDate()+' '+pad(now.getHours())+':'+pad(now.getMinutes())};
+    localStorage.setItem('checkin_'+devKey,JSON.stringify(rec));renderCheckin();ovl.style.display='none';}
+  [...document.querySelectorAll('#mChips button')].forEach(b=>b.onclick=()=>save(b.dataset.n));
+  document.getElementById('mOk').onclick=()=>save(document.getElementById('mInput').value);
+  document.getElementById('mInput').addEventListener('keydown',e=>{if(e.key==='Enter')save(e.target.value)});
+})();
 
 // ---- calendar ----
 const keys=Object.keys(AGG).sort();
