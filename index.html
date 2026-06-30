@@ -118,6 +118,14 @@ td.alldone{background:#f0fdf4}
  .ttbl td.vn{font-weight:800;white-space:normal}
  .ttbl td.qty{text-align:left;width:auto}
  .ttbl td[data-label='주소']{background:#f8fafc;border-radius:6px}
+ /* collapsed: show 업체/상품/수량만 */
+ .ttbl td.detail{display:none}
+ .ttbl tr.open td.detail{display:flex}
+ .ttbl td[data-label='업체']::before,.ttbl td[data-label='상품']::before{display:none}
+ .ttbl td.vn{cursor:pointer;font-size:15px;align-items:center}
+ .ttbl td.vn::after{content:'▸ 상세';margin-left:auto;font-size:11px;color:#2563eb;font-weight:700}
+ .ttbl tr.open td.vn::after{content:'▾ 닫기'}
+ .ttbl tr{cursor:pointer}
 }
 </style></head><body>
 <div class="wrap">
@@ -184,12 +192,12 @@ function renderChecklist(key){
     rows.forEach(r=>{const c=COL[r.product]||'#475569';
       const st=r.done?'<span class="stchip" style="background:#16a34a">출고완료</span>':'<span class="stchip" style="background:#dc2626">대기</span>';
       h+='<tr class="'+(r.done?'done':'')+'"><td class="ck"><input type="checkbox"'+(r.done?' checked':'')+'></td>'+
-         '<td data-label="상태">'+st+'</td>'+
-         '<td data-label="구분"><span class="stchip" style="background:'+(SRCCOL[r.src]||'#64748b')+'">'+esc(r.src||'')+'</span></td>'+
+         '<td class="detail" data-label="상태">'+st+'</td>'+
+         '<td class="detail" data-label="구분"><span class="stchip" style="background:'+(SRCCOL[r.src]||'#64748b')+'">'+esc(r.src||'')+'</span></td>'+
          '<td class="vn" data-label="업체">'+esc(r.vendor)+'</td>'+
          '<td data-label="상품"><span class="chip" style="background:'+c+'">'+esc(SHORT[r.product]||r.product)+'</span></td>'+
-         '<td data-label="사이즈">'+esc(r.size||'-')+'</td><td class="qty" data-label="수량">'+esc(r.qty)+'</td><td data-label="배송">'+esc(r.ship||'-')+'</td>'+
-         '<td class="tel" data-label="연락처">'+esc(r.tel||'-')+'</td><td data-label="주소">'+esc(r.addr||'-')+'</td></tr>'});
+         '<td class="detail" data-label="사이즈">'+esc(r.size||'-')+'</td><td class="qty" data-label="수량">'+esc(r.qty)+'</td><td data-label="배송">'+esc(r.ship||'-')+'</td>'+
+         '<td class="tel detail" data-label="연락처">'+esc(r.tel||'-')+'</td><td class="detail" data-label="주소">'+esc(r.addr||'-')+'</td></tr>'});
     h+='</tbody></table>';
     document.getElementById('todayBox').innerHTML=h;
   }else document.getElementById('todayBox').innerHTML='<div class="none">'+M+'/'+D+' 출고 예정 건이 없습니다.</div>';
@@ -299,6 +307,11 @@ function renderCal(hlDate){
   html+='</table>';document.getElementById('calBox').innerHTML=html;
 }
 renderCal();
+// mobile: tap row to expand details
+document.getElementById('todayBox').addEventListener('click',e=>{
+  if(e.target.closest('input'))return;
+  const tr=e.target.closest('tr'); if(tr&&tr.parentElement.tagName==='TBODY')tr.classList.toggle('open');
+});
 </script>
 <script>if('serviceWorker' in navigator){window.addEventListener('load',()=>navigator.serviceWorker.register('sw.js').catch(()=>{}))}</script>
 </body></html>
