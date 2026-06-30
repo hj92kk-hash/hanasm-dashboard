@@ -42,13 +42,13 @@ h1{font-size:22px}
 .datenav input[type=date]{font-size:13px;border:1px solid #cbd5e1;border-radius:6px;padding:4px 6px}
 #todayPanel{border:2px solid #dc2626}
 .tbadge{font-size:12px;font-weight:800;background:#dc2626;color:#fff;border-radius:7px;padding:3px 10px}
-.ttbl{width:100%;border-collapse:collapse;font-size:13px}
+.ttbl{width:100%;border-collapse:collapse;font-size:13px;table-layout:fixed}
 .ttbl th{background:#1e293b;color:#fff;text-align:left;padding:8px 9px;font-size:12px;white-space:nowrap}
-.ttbl td{padding:8px 9px;border-bottom:1px solid #e8edf3;vertical-align:top}
+.ttbl td{padding:7px 9px;border-bottom:1px solid #e8edf3;vertical-align:middle;word-break:break-word}
 .ttbl tr:nth-child(even) td{background:#f8fafc}
 .ttbl .ck{text-align:center;width:34px}
 .ttbl .qty{text-align:center;font-weight:800;width:46px}
-.ttbl .vn{font-weight:800;white-space:nowrap}
+.ttbl .vn{font-weight:800;white-space:normal;line-height:1.3}
 .ttbl .tel{white-space:nowrap}
 .chip{display:inline-block;font-size:11px;font-weight:700;padding:2px 7px;border-radius:5px;color:#fff;white-space:nowrap}
 .none{color:#64748b;font-size:14px;padding:10px 2px}
@@ -74,7 +74,13 @@ td.hl{background:#fff7d6}
 .partbadge{font-size:10px;font-weight:800;background:#64748b;color:#fff;border-radius:8px;padding:1px 6px;margin-left:4px}
 td.alldone{background:#f0fdf4}
 .ttbl tr.done td{opacity:.55}.ttbl tr.done .vn{text-decoration:line-through}
-.stchip{display:inline-block;font-size:10px;font-weight:800;border-radius:5px;padding:1px 6px;color:#fff}
+.stchip{display:inline-block;font-size:10px;font-weight:800;border-radius:5px;padding:2px 7px;color:#fff;white-space:nowrap}
+.ttbl col.c-ck{width:30px}.ttbl col.c-st{width:62px}.ttbl col.c-gb{width:52px}.ttbl col.c-vn{width:17%}
+.ttbl col.c-pd{width:92px}.ttbl col.c-sz{width:118px}.ttbl col.c-qt{width:42px}.ttbl col.c-sh{width:46px}.ttbl col.c-tel{width:108px}
+.ttbl td.ck,.ttbl td.qty,.ttbl td[data-label='상태'],.ttbl td[data-label='구분']{text-align:center}
+.ttbl td.ship{white-space:nowrap;text-align:center}
+.ttbl td.tel{white-space:nowrap;font-size:12px}
+.ttbl th{white-space:nowrap}
 .foot{font-size:11px;color:#94a3b8;text-align:center;margin-top:14px}
 .ovl{position:fixed;inset:0;background:rgba(15,23,42,.55);display:flex;align-items:center;justify-content:center;z-index:100;padding:20px}
 .modal{background:#fff;border-radius:14px;padding:24px;width:380px;max-width:92vw;box-shadow:0 10px 40px rgba(0,0,0,.3)}
@@ -166,7 +172,7 @@ function renderChecklist(key){
   const rows=DET[key]||[];const tq=rows.reduce((s,r)=>s+(+r.qty||0),0);
   if(rows.length){
     const dn=rows.filter(r=>r.done).length;document.getElementById('todaySum').innerHTML='총 '+rows.length+'건 · '+tq+'개 <span style="color:#16a34a;font-weight:700">(완료 '+dn+')</span>';
-    let h='<table class="ttbl"><thead><tr><th class="ck">✓</th><th>상태</th><th>구분</th><th>업체명</th><th>상품</th><th>사이즈</th><th class="qty">수량</th><th>배송</th><th>연락처</th><th>주소</th></tr></thead><tbody>';
+    let h='<table class="ttbl"><colgroup><col class="c-ck"><col class="c-st"><col class="c-gb"><col class="c-vn"><col class="c-pd"><col class="c-sz"><col class="c-qt"><col class="c-sh"><col class="c-tel"><col class="c-ad"></colgroup><thead><tr><th class="ck">✓</th><th>상태</th><th>구분</th><th>업체명</th><th>상품</th><th>사이즈</th><th class="qty">수량</th><th>배송</th><th>연락처</th><th>주소</th></tr></thead><tbody>';
     rows.forEach(r=>{const c=COL[r.product]||'#475569';
       const st=r.done?'<span class="stchip" style="background:#16a34a">출고완료</span>':'<span class="stchip" style="background:#dc2626">대기</span>';
       h+='<tr class="'+(r.done?'done':'')+'"><td class="ck"><input type="checkbox"'+(r.done?' checked':'')+'></td>'+
