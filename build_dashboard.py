@@ -82,6 +82,9 @@ for dt in sorted(agg):
         flags=vdone[(dt,v,src)]; vf=bool(flags) and all(flags)
         if vf: AGG[dt]['done']+=vt
         AGG[dt]['vendors'].append({'vendor':v,'src':src,'vtotal':vt,'products':prods,'done':vf})
+    sc={}
+    for ven in AGG[dt]['vendors']: sc[ven['src']]=sc.get(ven['src'],0)+ven['vtotal']
+    AGG[dt]['src']=sc
     AGG[dt]['all_done']=AGG[dt]['done']>=AGG[dt]['total'] and AGG[dt]['total']>0
 
 tpl=open(TPL,encoding='utf-8').read()
