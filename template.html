@@ -119,14 +119,14 @@ td.alldone{background:#f0fdf4}
   <div id="calBox"></div>
 </div>
 <div class="foot">하나사인몰 웹팀 · 자동 생성 대시보드</div>
-<div class="ovl" id="nameOvl" style="display:none"><div class="modal"><h2>👋 확인자 이름을 입력하세요</h2><p><span class="dev" id="mDev"></span> 로 접속하셨습니다. 출고 확인 담당자 이름을 선택하거나 입력해 주세요.</p><div class="chips" id="mChips"></div><input class="ni" id="mInput" type="text" placeholder="직접 입력 (예: 홍길동)"><button class="ok" id="mOk">확인하고 시작</button></div></div>
+<div class="ovl" id="nameOvl" style="display:none"><div class="modal"><h2>👋 확인자 이름을 입력하세요</h2><p><span class="dev" id="mDev"></span> 로 접속하셨습니다. 출고 확인 담당자 이름을 선택하거나 입력해 주세요.</p><input class="ni" id="mInput" type="text" placeholder="직접 입력 (예: 홍길동)"><button class="ok" id="mOk">확인하고 시작</button></div></div>
 </div>
 <script>
 const AGG=__AGG__;
 const DET=__DET__;
 const COL={'슬림디자인게시판':'#2563eb','슬림업게시판':'#059669','강화유리게시판':'#7c3aed','인포메이션':'#d97706'};
 const SHORT={'슬림디자인게시판':'슬림디자인','슬림업게시판':'슬림업','강화유리게시판':'강화유리','인포메이션':'인포'};
-const TEAM=['박상준','황국인','김은혜','홍재이','임정민'];
+const TEAM=[];
 function pad(n){return String(n).padStart(2,'0')}
 function esc(s){return String(s).replace(/[&<>]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;'}[c]))}
 const now=new Date();
@@ -191,14 +191,14 @@ const isMobile=/Mobi|Android|iPhone|iPad|iPod/i.test(navigator.userAgent);
 const devKey=isMobile?'mobile':'pc', devLabel=isMobile?'📱 모바일':'💻 PC';
 function renderCheckin(){
   const saved=JSON.parse(localStorage.getItem('checkin_'+devKey)||'null');
-  let opts='<option value="">담당자 선택</option>'+TEAM.map(n=>'<option'+(saved&&saved.name===n?' selected':'')+'>'+n+'</option>').join('');
-  let last=saved?('<span class="last">· 최근 '+saved.time+'</span>'):'';
-  document.getElementById('checkin').innerHTML='<span class="dev">'+devLabel+' 확인자</span><select id="ciSel">'+opts+'</select>'+last;
-  document.getElementById('ciSel').onchange=function(){
-    if(!this.value)return;
-    const rec={name:this.value,time:(now.getMonth()+1)+'/'+now.getDate()+' '+pad(now.getHours())+':'+pad(now.getMinutes())};
-    localStorage.setItem('checkin_'+devKey,JSON.stringify(rec));renderCheckin();
-  };
+  const val=saved?esc(saved.name):'';
+  const last=saved?('<span class="last">· 최근 '+saved.time+'</span>'):'';
+  document.getElementById('checkin').innerHTML='<span class="dev">'+devLabel+' 확인자</span><input id="ciSel" type="text" placeholder="이름 입력" value="'+val+'" style="width:90px">'+last;
+  const el=document.getElementById('ciSel');
+  function save(){const v=el.value.trim();if(!v)return;
+    const rec={name:v,time:(now.getMonth()+1)+'/'+now.getDate()+' '+pad(now.getHours())+':'+pad(now.getMinutes())};
+    localStorage.setItem('checkin_'+devKey,JSON.stringify(rec));renderCheckin();}
+  el.onchange=save; el.addEventListener('keydown',e=>{if(e.key==='Enter')save()});
 }
 renderCheckin();
 // ---- first-visit name modal ----
@@ -207,12 +207,10 @@ renderCheckin();
   if(saved&&saved.name)return;
   const ovl=document.getElementById('nameOvl');
   document.getElementById('mDev').textContent=devLabel;
-  document.getElementById('mChips').innerHTML=TEAM.map(n=>'<button data-n="'+n+'">'+n+'</button>').join('');
   ovl.style.display='flex';
   function save(name){if(!name||!name.trim())return;
     const rec={name:name.trim(),time:(now.getMonth()+1)+'/'+now.getDate()+' '+pad(now.getHours())+':'+pad(now.getMinutes())};
     localStorage.setItem('checkin_'+devKey,JSON.stringify(rec));renderCheckin();ovl.style.display='none';}
-  [...document.querySelectorAll('#mChips button')].forEach(b=>b.onclick=()=>save(b.dataset.n));
   document.getElementById('mOk').onclick=()=>save(document.getElementById('mInput').value);
   document.getElementById('mInput').addEventListener('keydown',e=>{if(e.key==='Enter')save(e.target.value)});
 })();
