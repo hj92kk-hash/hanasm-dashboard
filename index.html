@@ -26,6 +26,8 @@ h1{font-size:22px}
 .checkin .dev{font-weight:800}
 .checkin select,.checkin input{font-size:12px;border:1px solid #cbd5e1;border-radius:6px;padding:4px 6px}
 .checkin .last{color:#64748b}
+.checkin .nm{font-weight:800;color:#0f172a}
+.checkin .cibtn{font-size:11px;border:1px solid #cbd5e1;background:#fff;border-radius:6px;padding:2px 7px;cursor:pointer;color:#475569}
 .panel{background:#fff;border-radius:12px;padding:16px 18px;box-shadow:0 1px 4px rgba(0,0,0,.07);margin-bottom:18px}
 .ptitle{font-size:16px;font-weight:800;margin-bottom:12px;display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap}
 .tabs{display:flex;gap:6px}
@@ -204,16 +206,21 @@ document.addEventListener('click',e=>{if(!e.target.closest('.searchbox'))sRes.cl
 // ---- check-in (담당자 이름) ----
 const isMobile=/Mobi|Android|iPhone|iPad|iPod/i.test(navigator.userAgent);
 const devKey=isMobile?'mobile':'pc', devLabel=isMobile?'📱 모바일':'💻 PC';
-function renderCheckin(){
+function saveName(v){v=(v||'').trim();if(!v)return;
+  const rec={name:v,time:(now.getMonth()+1)+'/'+now.getDate()+' '+pad(now.getHours())+':'+pad(now.getMinutes())};
+  localStorage.setItem('checkin_'+devKey,JSON.stringify(rec));renderCheckin();}
+function renderCheckin(edit){
   const saved=JSON.parse(localStorage.getItem('checkin_'+devKey)||'null');
-  const val=saved?esc(saved.name):'';
-  const last=saved?('<span class="last">· 최근 '+saved.time+'</span>'):'';
-  document.getElementById('checkin').innerHTML='<span class="dev">'+devLabel+' 확인자</span><input id="ciSel" type="text" placeholder="이름 입력" value="'+val+'" style="width:90px">'+last;
-  const el=document.getElementById('ciSel');
-  function save(){const v=el.value.trim();if(!v)return;
-    const rec={name:v,time:(now.getMonth()+1)+'/'+now.getDate()+' '+pad(now.getHours())+':'+pad(now.getMinutes())};
-    localStorage.setItem('checkin_'+devKey,JSON.stringify(rec));renderCheckin();}
-  el.onchange=save; el.addEventListener('keydown',e=>{if(e.key==='Enter')save()});
+  const box=document.getElementById('checkin');
+  if(saved&&saved.name&&!edit){
+    box.innerHTML='<span class="dev">'+devLabel+' 접속자</span><span class="nm">'+esc(saved.name)+'</span><button class="cibtn" id="ciEdit">변경</button>';
+    document.getElementById('ciEdit').onclick=()=>renderCheckin(true);
+  }else{
+    box.innerHTML='<span class="dev">'+devLabel+' 접속자</span><input id="ciSel" type="text" placeholder="이름 입력" value="'+(saved?esc(saved.name):'')+'" style="width:90px"><button class="cibtn" id="ciSave">확인</button>';
+    const el=document.getElementById('ciSel');el.focus();
+    document.getElementById('ciSave').onclick=()=>saveName(el.value);
+    el.addEventListener('keydown',e=>{if(e.key==='Enter')saveName(el.value)});
+  }
 }
 renderCheckin();
 // ---- first-visit name modal ----
