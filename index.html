@@ -1,0 +1,125 @@
+<!DOCTYPE html>
+<html lang="ko"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>게시판 출고 대시보드 | 하나사인몰</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:-apple-system,'Malgun Gothic','맑은 고딕',sans-serif;color:#0f172a;background:#eef1f5}
+.wrap{max-width:1180px;margin:0 auto;padding:22px 18px 60px}
+header{display:flex;justify-content:space-between;align-items:flex-end;flex-wrap:wrap;gap:10px;margin-bottom:16px}
+h1{font-size:23px}
+.subt{font-size:12px;color:#64748b;margin-top:3px}
+.btn{font-size:13px;font-weight:700;border:none;border-radius:8px;padding:8px 14px;cursor:pointer;background:#1e293b;color:#fff}
+.panel{background:#fff;border-radius:12px;padding:16px 18px;box-shadow:0 1px 4px rgba(0,0,0,.07);margin-bottom:18px}
+.ptitle{font-size:16px;font-weight:800;margin-bottom:12px;display:flex;justify-content:space-between;align-items:center}
+.tabs{display:flex;gap:6px}
+.tab{font-size:12.5px;font-weight:700;border:1px solid #cbd5e1;background:#fff;color:#475569;border-radius:7px;padding:5px 12px;cursor:pointer}
+.tab.on{background:#1e293b;color:#fff;border-color:#1e293b}
+/* today */
+#todayPanel{border:2px solid #dc2626}
+.tbadge{font-size:12px;font-weight:800;background:#dc2626;color:#fff;border-radius:7px;padding:3px 10px}
+.ttbl{width:100%;border-collapse:collapse;font-size:13px}
+.ttbl th{background:#1e293b;color:#fff;text-align:left;padding:8px 9px;font-size:12px;white-space:nowrap}
+.ttbl td{padding:8px 9px;border-bottom:1px solid #e8edf3;vertical-align:top}
+.ttbl tr:nth-child(even) td{background:#f8fafc}
+.ttbl .ck{text-align:center;width:34px}
+.ttbl .qty{text-align:center;font-weight:800;width:46px}
+.ttbl .vn{font-weight:800;white-space:nowrap}
+.chip{display:inline-block;font-size:11px;font-weight:700;padding:2px 7px;border-radius:5px;color:#fff;white-space:nowrap}
+.none{color:#64748b;font-size:14px;padding:10px 2px}
+.legend{font-size:12px;color:#475569;margin-bottom:10px}
+.legend span{margin-right:13px;white-space:nowrap}
+.legend i{display:inline-block;width:11px;height:11px;border-radius:2px;vertical-align:-1px;margin-right:4px}
+table.cal{width:100%;border-collapse:collapse;table-layout:fixed}
+table.cal th{background:#1e293b;color:#fff;font-size:13px;padding:6px 0;border:1px solid #1e293b}
+table.cal td{border:1.2px solid #94a3b8;vertical-align:top;width:20%;height:120px;padding:4px 6px;overflow:hidden}
+td.empty{background:#f8fafc}
+td.today{outline:3px solid #dc2626;outline-offset:-3px}
+.dn{font-size:14px;font-weight:800;color:#334155;border-bottom:1px solid #e2e8f0;padding-bottom:3px;margin-bottom:4px;display:flex;justify-content:space-between;align-items:center}
+.cnt{font-size:11px;font-weight:800;background:#1e293b;color:#fff;border-radius:9px;padding:1px 9px}
+.it{font-size:10.5px;line-height:1.32;margin-bottom:3px;padding-left:10px;position:relative}
+.it::before{content:'';position:absolute;left:0;top:4px;width:6px;height:6px;border-radius:1px;background:var(--c)}
+.vn2{font-weight:800}.pq{color:#475569}.pq b{color:#0f172a;font-weight:800}
+.foot{font-size:11px;color:#94a3b8;text-align:center;margin-top:14px}
+@media print{
+  @page{size:A4 landscape;margin:8mm}
+  body{background:#fff}.wrap{max-width:none;padding:0}
+  #printbtn,.foot{display:none}.panel{box-shadow:none}
+  table.cal{height:165mm}table.cal td{height:auto}
+}
+@media(max-width:680px){table.cal td{height:auto;min-height:80px}.ttbl{font-size:12px}}
+</style></head><body>
+<div class="wrap">
+<header>
+  <div><h1>게시판 출고 작업 대시보드</h1>
+  <div class="subt">출고일 기준 · 데이터: 게시판제작공정시트 · <span id="upd"></span></div></div>
+  <button class="btn" id="printbtn" onclick="window.print()">🖨 A4 가로 인쇄</button>
+</header>
+
+<div class="panel" id="todayPanel">
+  <div class="ptitle"><span>✅ 오늘 출고 체크리스트 <span class="tbadge" id="todayDate"></span></span>
+     <span id="todaySum" style="font-size:13px;color:#64748b"></span></div>
+  <div id="todayBox"></div>
+</div>
+
+<div class="panel">
+  <div class="ptitle"><span>출고 달력 (월~금)</span><div class="tabs" id="monthTabs"></div></div>
+  <div class="legend"><span><i style="background:#2563eb"></i>슬림디자인</span><span><i style="background:#059669"></i>슬림업</span><span><i style="background:#7c3aed"></i>강화유리</span><span><i style="background:#d97706"></i>인포</span></div>
+  <div id="calBox"></div>
+</div>
+<div class="foot">하나사인몰 웹팀 · 자동 생성 대시보드</div>
+</div>
+<script>
+const AGG={"2026-06-30": {"total": 10, "vendors": [{"vendor": "박미진/변영복소장님", "vtotal": 1, "products": [{"name": "슬림디자인게시판", "qty": 1}]}, {"vendor": "진종합관리주식회사(더원타워)", "vtotal": 9, "products": [{"name": "인포메이션", "qty": 6}, {"name": "슬림디자인게시판", "qty": 3}]}]}, "2026-07-02": {"total": 27, "vendors": [{"vendor": "그린산업안전", "vtotal": 5, "products": [{"name": "슬림업게시판", "qty": 5}]}, {"vendor": "임도혜(마음편한병원)", "vtotal": 22, "products": [{"name": "슬림업게시판", "qty": 22}]}]}, "2026-07-03": {"total": 27, "vendors": [{"vendor": "심혜영/LP댄스보컬", "vtotal": 1, "products": [{"name": "슬림디자인게시판", "qty": 1}]}, {"vendor": "김경우", "vtotal": 2, "products": [{"name": "슬림디자인게시판", "qty": 2}]}, {"vendor": "유선영/봉구비어가맹본부", "vtotal": 1, "products": [{"name": "슬림디자인게시판", "qty": 1}]}, {"vendor": "미래티아이에스", "vtotal": 1, "products": [{"name": "슬림업게시판", "qty": 1}]}, {"vendor": "김진영", "vtotal": 1, "products": [{"name": "슬림업게시판", "qty": 1}]}, {"vendor": "주식회사비엠에스종합관리/동탄역플라세라더테라스", "vtotal": 21, "products": [{"name": "슬림업게시판", "qty": 21}]}]}, "2026-07-06": {"total": 37, "vendors": [{"vendor": "하나애드빌(파랑새(골드))", "vtotal": 5, "products": [{"name": "슬림업게시판", "qty": 5}]}, {"vendor": "시그니처광교2차지식산업센터", "vtotal": 8, "products": [{"name": "슬림업게시판", "qty": 8}]}, {"vendor": "동우씨엠(주)서울지점", "vtotal": 6, "products": [{"name": "강화유리게시판", "qty": 6}]}, {"vendor": "(주)나비엠알오(강혜정)", "vtotal": 1, "products": [{"name": "슬림업게시판", "qty": 1}]}, {"vendor": "인천시청역한신더휴아파트", "vtotal": 14, "products": [{"name": "슬림디자인게시판", "qty": 14}]}, {"vendor": "안명은", "vtotal": 3, "products": [{"name": "슬림디자인게시판", "qty": 3}]}]}, "2026-07-07": {"total": 5, "vendors": [{"vendor": "전라남도순천의료원", "vtotal": 3, "products": [{"name": "슬림디자인게시판", "qty": 3}]}, {"vendor": "권지영", "vtotal": 1, "products": [{"name": "슬림디자인게시판", "qty": 1}]}, {"vendor": "한병문", "vtotal": 1, "products": [{"name": "슬림업게시판", "qty": 1}]}]}, "2026-07-08": {"total": 80, "vendors": [{"vendor": "하나애드빌(보정대림아파트)", "vtotal": 13, "products": [{"name": "슬림업게시판", "qty": 13}]}, {"vendor": "이편한세상비전센터포레아파트", "vtotal": 14, "products": [{"name": "슬림업게시판", "qty": 14}]}, {"vendor": "박민정", "vtotal": 1, "products": [{"name": "슬림업게시판", "qty": 1}]}, {"vendor": "신정282가로주택정비사업소", "vtotal": 7, "products": [{"name": "슬림업게시판", "qty": 7}]}, {"vendor": "대우트럼프월드", "vtotal": 1, "products": [{"name": "슬림업게시판", "qty": 1}]}, {"vendor": "힐스테이트평택더퍼스트", "vtotal": 32, "products": [{"name": "슬림디자인게시판", "qty": 32}]}, {"vendor": "이튼타워리버3차아파트", "vtotal": 6, "products": [{"name": "슬림디자인게시판", "qty": 6}]}, {"vendor": "박종근", "vtotal": 4, "products": [{"name": "슬림디자인게시판", "qty": 4}]}, {"vendor": "최규현", "vtotal": 1, "products": [{"name": "슬림업게시판", "qty": 1}]}, {"vendor": "박중현", "vtotal": 1, "products": [{"name": "슬림업게시판", "qty": 1}]}]}, "2026-07-09": {"total": 34, "vendors": [{"vendor": "주식회사미래비엠", "vtotal": 3, "products": [{"name": "슬림업게시판", "qty": 3}]}, {"vendor": "최정호", "vtotal": 1, "products": [{"name": "슬림업게시판", "qty": 1}]}, {"vendor": "이기정", "vtotal": 2, "products": [{"name": "슬림업게시판", "qty": 2}]}, {"vendor": "조상훈", "vtotal": 1, "products": [{"name": "슬림디자인게시판", "qty": 1}]}, {"vendor": "김장원", "vtotal": 4, "products": [{"name": "슬림디자인게시판", "qty": 4}]}, {"vendor": "한국희", "vtotal": 8, "products": [{"name": "슬림디자인게시판", "qty": 3}, {"name": "슬림업게시판", "qty": 5}]}, {"vendor": "호원삼익1차아파트", "vtotal": 15, "products": [{"name": "슬림디자인게시판", "qty": 15}]}]}, "2026-07-10": {"total": 8, "vendors": [{"vendor": "안정무", "vtotal": 1, "products": [{"name": "슬림디자인게시판", "qty": 1}]}, {"vendor": "박경열", "vtotal": 1, "products": [{"name": "슬림업게시판", "qty": 1}]}, {"vendor": "권응호", "vtotal": 1, "products": [{"name": "슬림디자인게시판", "qty": 1}]}, {"vendor": "서금리", "vtotal": 1, "products": [{"name": "슬림디자인게시판", "qty": 1}]}, {"vendor": "한빛아파트", "vtotal": 1, "products": [{"name": "슬림업게시판", "qty": 1}]}, {"vendor": "사단법인김해그루터기", "vtotal": 2, "products": [{"name": "슬림업게시판", "qty": 1}, {"name": "슬림디자인게시판", "qty": 1}]}, {"vendor": "제7067부대/이강범", "vtotal": 1, "products": [{"name": "슬림디자인게시판", "qty": 1}]}]}, "2026-07-13": {"total": 46, "vendors": [{"vendor": "김이수", "vtotal": 1, "products": [{"name": "슬림디자인게시판", "qty": 1}]}, {"vendor": "검단신도시우미린파크뷰2단지", "vtotal": 39, "products": [{"name": "강화유리게시판", "qty": 39}]}, {"vendor": "정홍신", "vtotal": 1, "products": [{"name": "슬림업게시판", "qty": 1}]}, {"vendor": "힐스테이트구리역아파트", "vtotal": 5, "products": [{"name": "슬림업게시판", "qty": 5}]}]}, "2026-07-14": {"total": 1, "vendors": [{"vendor": "동탄파크릭스A51-2BL", "vtotal": 1, "products": [{"name": "강화유리게시판", "qty": 1}]}]}};
+const DET={"2026-06-30": [{"vendor": "박미진/변영복소장님", "product": "슬림디자인게시판", "size": "2구기본(520*400)", "qty": 1, "ship": "택배", "tel": "010-5697-7244", "addr": "서울특별시 노원구 한글비석로 253(중계동) 세신프라자 B2 관리실"}, {"vendor": "진종합관리주식회사(더원타워)", "product": "인포메이션", "size": "500*740", "qty": 2, "ship": "퀵", "tel": "", "addr": ""}, {"vendor": "진종합관리주식회사(더원타워)", "product": "인포메이션", "size": "600*800", "qty": 4, "ship": "퀵", "tel": "", "addr": ""}, {"vendor": "진종합관리주식회사(더원타워)", "product": "슬림디자인게시판", "size": "8구기본(1000*740)", "qty": 2, "ship": "퀵", "tel": "010-7748-4012", "addr": "인천광역시 서구 이음5로 36 (원당동) 1동 지하1층 관리사무소"}, {"vendor": "진종합관리주식회사(더원타워)", "product": "슬림디자인게시판", "size": "6구기본(760*740)", "qty": 1, "ship": "퀵", "tel": "010-7748-4012", "addr": "인천광역시 서구 이음5로 36 (원당동) 1동 지하1층 관리사무소"}], "2026-07-02": [{"vendor": "그린산업안전", "product": "슬림업게시판", "size": "1100*1200", "qty": 2, "ship": "퀵", "tel": "02-3394-5909/010-6658-2711", "addr": "서울특별시 동대문구 장한로26가길 118 (장안동) 그린산업안전"}, {"vendor": "그린산업안전", "product": "슬림업게시판", "size": "1400*1200", "qty": 2, "ship": "", "tel": "", "addr": ""}, {"vendor": "그린산업안전", "product": "슬림업게시판", "size": "1300*1000", "qty": 1, "ship": "", "tel": "", "addr": ""}, {"vendor": "임도혜(마음편한병원)", "product": "슬림업게시판", "size": "8구기본(1000*740)", "qty": 22, "ship": "퀵", "tel": "010-9781-2340/010-7103-3260", "addr": "대전광역시 중구 중교로 32 (대흥동) 마음편한병원 원무과 1층"}], "2026-07-03": [{"vendor": "심혜영/LP댄스보컬", "product": "슬림디자인게시판", "size": "10구기본(1226*740))", "qty": 1, "ship": "경동택배(10구이상)", "tel": "010-8807-8758", "addr": "서울특별시 강남구 강남대로114길 10 (논현동) 6층"}, {"vendor": "김경우", "product": "슬림디자인게시판", "size": "8구광고(1000*830)", "qty": 2, "ship": "택배", "tel": "031-269-7426/010-6470-7421", "addr": "경기도 수원시 권선구 일월천로15번길 22-7(구운동) 1층 그린주의 경기지사"}, {"vendor": "유선영/봉구비어가맹본부", "product": "슬림디자인게시판", "size": "3구기본(760*400)", "qty": 1, "ship": "택배", "tel": "010-4629-9230", "addr": "부산광역시 남구 수영로298번길 39-5 (대연동,영창빌딩) 2층"}, {"vendor": "미래티아이에스", "product": "슬림업게시판", "size": "6구기본(760*740)", "qty": 1, "ship": "택배", "tel": "02-3141-9580/010-32750758", "addr": "서울특별시 마포구 월드컵로32길 19(성산동) 1층"}, {"vendor": "김진영", "product": "슬림업게시판", "size": "6구광고(760*830)", "qty": 1, "ship": "택배", "tel": "010-3798-8343", "addr": "충청북도 충주시 동수10길 11(연수동) 디자인팩토리"}, {"vendor": "주식회사비엠에스종합관리/동탄역플라세라더테라스", "product": "슬림업게시판", "size": "6구기본(760*740)", "qty": 21, "ship": "시공", "tel": "010-9467-3641", "addr": "경기도 화성시 동탄구 동탄순환대로 =30길 24 (영천동, 동탄역 플라쎄 더 테라스) 관리사무소"}], "2026-07-06": [{"vendor": "하나애드빌(파랑새(골드))", "product": "슬림업게시판", "size": "3구광고(760*490)", "qty": 5, "ship": "택배", "tel": "010-8751-2279", "addr": ""}, {"vendor": "시그니처광교2차지식산업센터", "product": "슬림업게시판", "size": "6구기본(760*740)", "qty": 6, "ship": "시공", "tel": "031-212-9642", "addr": "경기도 용인시 수지구 포은대로59번길 40 (상현동) 관리사무소"}, {"vendor": "시그니처광교2차지식산업센터", "product": "슬림업게시판", "size": "8구기본(1000*740)", "qty": 2, "ship": "시공", "tel": "031-212-9642", "addr": "경기도 용인시 수지구 포은대로59번길 40 (상현동) 관리사무소"}, {"vendor": "동우씨엠(주)서울지점", "product": "강화유리게시판", "size": "690*850", "qty": 6, "ship": "퀵", "tel": "02-863-2802/010-7129-7924", "addr": "서울특별시 금천구 가산디지털1로 222 (가산동) 어바니엘가산 관리사무소"}, {"vendor": "(주)나비엠알오(강혜정)", "product": "슬림업게시판", "size": "6구기본(760*740)", "qty": 1, "ship": "택배", "tel": "063-284-2737/010-3433-8950", "addr": "전북특별자치도 전주시 완산구 장승배기로 310-6 (서서학동) (주)풍년제과"}, {"vendor": "인천시청역한신더휴아파트", "product": "슬림디자인게시판", "size": "6구기본(760*740)", "qty": 13, "ship": "시공", "tel": "010-9099-3235", "addr": ""}, {"vendor": "인천시청역한신더휴아파트", "product": "슬림디자인게시판", "size": "8구기본(1000*740)", "qty": 1, "ship": "시공", "tel": "010-9099-3235", "addr": ""}, {"vendor": "안명은", "product": "슬림디자인게시판", "size": "3구기본(760*400)", "qty": 3, "ship": "택배", "tel": "010-3055-3758", "addr": "서울특별시 송파구 잠실동 336-5 잠실포스코더샵 1405호"}], "2026-07-07": [{"vendor": "전라남도순천의료원", "product": "슬림디자인게시판", "size": "3구기본(760*400)", "qty": 1, "ship": "퀵", "tel": "061-759-9420", "addr": "전라남도 순천시 서문성터길 2 (매곡동)전라남도순천의료원"}, {"vendor": "전라남도순천의료원", "product": "슬림디자인게시판", "size": "1240*740", "qty": 1, "ship": "퀵", "tel": "", "addr": ""}, {"vendor": "전라남도순천의료원", "product": "슬림디자인게시판", "size": "1670*745", "qty": 1, "ship": "퀵", "tel": "", "addr": ""}, {"vendor": "권지영", "product": "슬림디자인게시판", "size": "3구기본(760*400)", "qty": 1, "ship": "택배", "tel": "010-4591-2205", "addr": "서울특별시 노원구 동이로203가길 29 (중계동, 브라운스톤중계) 242호 서울미소그린치과"}, {"vendor": "한병문", "product": "슬림업게시판", "size": "8구기본(1000*740)", "qty": 1, "ship": "택배", "tel": "010-8940-5639", "addr": "서울특별시 강남구 삼성로 512 (삼성동) 11층 유니레버코리아"}], "2026-07-08": [{"vendor": "하나애드빌(보정대림아파트)", "product": "슬림업게시판", "size": "6구기본(760*740)", "qty": 13, "ship": "방문", "tel": "010-8751-2279", "addr": ""}, {"vendor": "이편한세상비전센터포레아파트", "product": "슬림업게시판", "size": "8구기본(1000*740)", "qty": 12, "ship": "시공", "tel": "031-692-4462", "addr": "경기도 평택시 용죽1로 83 (용이동, e편한세상 비전 센터포레) 관리사무소"}, {"vendor": "이편한세상비전센터포레아파트", "product": "슬림업게시판", "size": "10구기본(1226*740))", "qty": 1, "ship": "", "tel": "", "addr": ""}, {"vendor": "이편한세상비전센터포레아파트", "product": "슬림업게시판", "size": "10구기본(1226*740))", "qty": 1, "ship": "", "tel": "", "addr": ""}, {"vendor": "박민정", "product": "슬림업게시판", "size": "10구기본(1226*740))", "qty": 1, "ship": "경동택배(10구이상)", "tel": "031-986-7080/010-3201-4098", "addr": "경기도 김포시 김포한강3로 432(마산동) 골든하임 1층 109호"}, {"vendor": "신정282가로주택정비사업소", "product": "슬림업게시판", "size": "4구기본(1000*400)", "qty": 7, "ship": "택배", "tel": "02-2062-7717/010-2533-6657", "addr": "서울 양천구 목동동로8길 31-5 (신정동) 작은도서관(관리사무소)"}, {"vendor": "대우트럼프월드", "product": "슬림업게시판", "size": "6구기본(760*740)", "qty": 1, "ship": "퀵", "tel": "", "addr": ""}, {"vendor": "힐스테이트평택더퍼스트", "product": "슬림디자인게시판", "size": "970*740", "qty": 32, "ship": "시공", "tel": "031-668-8191", "addr": "경기도 평택시 서정북로 100(서정동, 힐스테이트 평택 더퍼스트) 관리사무소"}, {"vendor": "이튼타워리버3차아파트", "product": "슬림디자인게시판", "size": "6구기본(760*740)", "qty": 6, "ship": "택배", "tel": "02-461-3270", "addr": "서울특별시 광진구 능동로 18 (자양동, 이튼타워리버3차) 3층"}, {"vendor": "박종근", "product": "슬림디자인게시판", "size": "4구광고(1000*490)", "qty": 4, "ship": "택배", "tel": "010-9615-7010", "addr": "충청남도 논산시 중앙로260번길 38 (취암동) 그대안애8차 현장"}, {"vendor": "최규현", "product": "슬림업게시판", "size": "10구광고(1226*830)", "qty": 1, "ship": "경동택배(10구이상)", "tel": "010-5399-1916", "addr": "경기도 용인시 처인구 중부대로 1404(김량장동) 주석빌딩 101호 디자인21"}, {"vendor": "박중현", "product": "슬림업게시판", "size": "8구기본(1000*740)", "qty": 1, "ship": "택배", "tel": "044-417-6636/010-6490-3333", "addr": "세종특별자치시 보듬3로 158(아름동) 2층 고래한방병원"}], "2026-07-09": [{"vendor": "주식회사미래비엠", "product": "슬림업게시판", "size": "1구기본(280*400)", "qty": 2, "ship": "택배", "tel": "010-8800-3653", "addr": "서울특별시 관악구 봉천로 227 (봉천동) 보라매샤르망빌딩 주차관리실 관리소장 최인호"}, {"vendor": "주식회사미래비엠", "product": "슬림업게시판", "size": "2구기본(520*400)", "qty": 1, "ship": "택배", "tel": "010-8800-3653", "addr": "서울특별시 관악구 봉천로 227 (봉천동) 보라매샤르망빌딩 주차관리실 관리소장 최인호"}, {"vendor": "최정호", "product": "슬림업게시판", "size": "10구기본(1226*740))", "qty": 1, "ship": "경동택배(10구이상)", "tel": "010-5533-4379", "addr": "부산광역시 부산진구 동천로24번길 22 (전포동) 1층 오피스큐부산점"}, {"vendor": "이기정", "product": "슬림업게시판", "size": "6구기본(760*740)", "qty": 2, "ship": "택배", "tel": "010-7272-8282", "addr": "대전광역시 서구 신갈마로 142-7(갈마동) 어반브릿지 201호"}, {"vendor": "조상훈", "product": "슬림디자인게시판", "size": "4구기본(1000*400)", "qty": 1, "ship": "택배", "tel": "010-8020-1700", "addr": "전라북도 군산시 월명로 144 은혜산부인과 2층 사무실"}, {"vendor": "김장원", "product": "슬림디자인게시판", "size": "3구기본(760*400)", "qty": 4, "ship": "택배", "tel": "010-9306-9006", "addr": "서울특별시 강서구 공항대로45나길 36 (등촌동) 센트럴르씨엘 409호"}, {"vendor": "한국희", "product": "슬림디자인게시판", "size": "10구기본(1226*740))", "qty": 3, "ship": "퀵", "tel": "010-2421-2862", "addr": "인천광역시 연수구 송도국제대로 123 (송도동, 현대프리미엄 아울렛 송도점) B2 통합사무실 지원팀"}, {"vendor": "한국희", "product": "슬림업게시판", "size": "8구기본(1000*740)", "qty": 5, "ship": "퀵", "tel": "", "addr": ""}, {"vendor": "호원삼익1차아파트", "product": "슬림디자인게시판", "size": "3구기본(760*400)", "qty": 15, "ship": "퀵", "tel": "031-829-2775", "addr": "경기도 의정부시 백석로 33 (호원동, 삼익1차아파트) 관리사무소"}], "2026-07-10": [{"vendor": "안정무", "product": "슬림디자인게시판", "size": "2구광고(520*490)", "qty": 1, "ship": "택배", "tel": "010-7335-7720", "addr": "경기 양주시 옥정동로7다길 74 (옥정동) 부자로타워 6207호"}, {"vendor": "박경열", "product": "슬림업게시판", "size": "10구기본(1226*740))", "qty": 1, "ship": "경동택배(10구이상)", "tel": "010-3187-8535/010-4056-0223", "addr": "경기도 부천시 소사구 경인로 400(소사본동, 훼미리아파트2차) 101호"}, {"vendor": "권응호", "product": "슬림디자인게시판", "size": "4구기본(1000*400)", "qty": 1, "ship": "택배", "tel": "010-6334-6030", "addr": "서울특별시 노원구 상계로 136 (상계동) 필디자인"}, {"vendor": "서금리", "product": "슬림디자인게시판", "size": "3구기본(760*400)", "qty": 1, "ship": "택배", "tel": "010-8517-9877", "addr": "경상남도 김해시 활천로 74번길 4 (삼정동) 603호"}, {"vendor": "한빛아파트", "product": "슬림업게시판", "size": "8구기본(1000*740)", "qty": 1, "ship": "택배", "tel": "02-477-6916/010-5559-6848", "addr": "서울특별시 강동구 성안로 170(길동, 한빛아파트) 관리사무소"}, {"vendor": "사단법인김해그루터기", "product": "슬림업게시판", "size": "8구기본(1000*740)", "qty": 1, "ship": "택배", "tel": "010-2202-3683", "addr": "경상남도 김해시 흥동로 7(풍유동) 2층 소망홀 김해중앙교회"}, {"vendor": "사단법인김해그루터기", "product": "슬림디자인게시판", "size": "4구기본(1000*400)", "qty": 1, "ship": "택배", "tel": "010-2202-3683", "addr": "경상남도 김해시 흥동로 7(풍유동) 2층 소망홀 김해중앙교회"}, {"vendor": "제7067부대/이강범", "product": "슬림디자인게시판", "size": "10구기본(1226*740))", "qty": 1, "ship": "경동택배(10구이상)", "tel": "010-5085-8512", "addr": "강원특별자치도 홍천군 화촌면 홍천로 1157 제20기갑여단 정보중대 상사 이강범"}], "2026-07-13": [{"vendor": "김이수", "product": "슬림디자인게시판", "size": "8구기본(1000*740)", "qty": 1, "ship": "택배", "tel": "010-4195-4095", "addr": "전라남도 광양시 중마로 250 (중동, 광양백운고등학교) 행정실앞"}, {"vendor": "검단신도시우미린파크뷰2단지", "product": "강화유리게시판", "size": "1000*812", "qty": 39, "ship": "시공", "tel": "", "addr": ""}, {"vendor": "정홍신", "product": "슬림업게시판", "size": "8구기본(1000*740)", "qty": 1, "ship": "택배", "tel": "010-7317-9990", "addr": "서울특별시 용산구 원효로 115(원효로3가) 1층 / 1층 복도에 놓아주세요."}, {"vendor": "힐스테이트구리역아파트", "product": "슬림업게시판", "size": "6구광고(760*830)", "qty": 2, "ship": "퀵", "tel": "070-4135-4657", "addr": "경기도 구리시 경춘로276번길 34 (수택동) 힐스테이트구리역아파트 관리사무소"}, {"vendor": "힐스테이트구리역아파트", "product": "슬림업게시판", "size": "10구광고(1226*830)", "qty": 2, "ship": "", "tel": "", "addr": ""}, {"vendor": "힐스테이트구리역아파트", "product": "슬림업게시판", "size": "1720*830", "qty": 1, "ship": "", "tel": "", "addr": ""}], "2026-07-14": [{"vendor": "동탄파크릭스A51-2BL", "product": "강화유리게시판", "size": "1000*750", "qty": 1, "ship": "시공", "tel": "", "addr": ""}]};
+const COL={'슬림디자인게시판':'#2563eb','슬림업게시판':'#059669','강화유리게시판':'#7c3aed','인포메이션':'#d97706'};
+const SHORT={'슬림디자인게시판':'슬림디자인','슬림업게시판':'슬림업','강화유리게시판':'강화유리','인포메이션':'인포'};
+function pad(n){return String(n).padStart(2,'0')}
+const now=new Date();
+const todayKey=now.getFullYear()+'-'+pad(now.getMonth()+1)+'-'+pad(now.getDate());
+// ---- TODAY checklist ----
+document.getElementById('todayDate').textContent=(now.getMonth()+1)+'/'+now.getDate()+' ('+['일','월','화','수','목','금','토'][now.getDay()]+')';
+const rows=DET[todayKey]||[];
+const tq=rows.reduce((s,r)=>s+(+r.qty||0),0);
+if(rows.length){
+  document.getElementById('todaySum').textContent='총 '+rows.length+'건 · '+tq+'개';
+  let h='<table class="ttbl"><thead><tr><th class="ck">✓</th><th>업체명</th><th>상품</th><th>사이즈</th><th class="qty">수량</th><th>배송</th><th>연락처</th><th>주소</th></tr></thead><tbody>';
+  rows.forEach(r=>{const c=COL[r.product]||'#475569';
+    h+=`<tr><td class="ck"><input type="checkbox"></td><td class="vn">${r.vendor}</td>`+
+       `<td><span class="chip" style="background:${c}">${SHORT[r.product]||r.product}</span></td>`+
+       `<td>${r.size||'-'}</td><td class="qty">${r.qty}</td><td>${r.ship||'-'}</td>`+
+       `<td style="white-space:nowrap">${r.tel||'-'}</td><td>${r.addr||'-'}</td></tr>`});
+  h+='</tbody></table>';
+  document.getElementById('todayBox').innerHTML=h;
+}else{
+  document.getElementById('todayBox').innerHTML='<div class="none">오늘('+todayKey+') 출고 예정 건이 없습니다.</div>';
+}
+// ---- calendar ----
+const keys=Object.keys(AGG).sort();
+const months=[...new Set(keys.map(k=>k.slice(0,7)))];
+const mt=document.getElementById('monthTabs');
+let curMonth=months.includes(todayKey.slice(0,7))?todayKey.slice(0,7):months[months.length-1];
+months.forEach(m=>{const mm=+m.split('-')[1];const b=document.createElement('button');b.className='tab'+(m===curMonth?' on':'');b.textContent=mm+'월';b.onclick=()=>{curMonth=m;[...mt.children].forEach(c=>c.classList.remove('on'));b.classList.add('on');renderCal()};mt.appendChild(b)});
+function renderCal(){
+  const[y,m]=curMonth.split('-').map(Number);
+  const first=new Date(y,m-1,1),dim=new Date(y,m,0).getDate();
+  let cells=[],startW=(first.getDay()+6)%7;
+  for(let i=0;i<startW;i++)cells.push(0);
+  for(let d=1;d<=dim;d++)cells.push(d);
+  while(cells.length%7)cells.push(0);
+  let html='<table class="cal"><tr>'+['월','화','수','목','금'].map(d=>`<th>${d}</th>`).join('')+'</tr>';
+  for(let w=0;w<cells.length/7;w++){html+='<tr>';
+    for(let i=0;i<5;i++){const day=cells[w*7+i];
+      if(!day){html+='<td class="empty"></td>';continue}
+      const key=`${y}-${pad(m)}-${pad(day)}`;const isT=key===todayKey?' today':'';
+      if(AGG[key]){const d=AGG[key];let c=`<td class="${isT.trim()}"><div class="dn"><span>${day}</span><span class="cnt">${d.total}건</span></div>`;
+        d.vendors.forEach(v=>{const pc=COL[v.products[0].name]||'#475569';const pl=v.products.map(p=>`${SHORT[p.name]||p.name}<b>${p.qty}</b>`).join(' ');
+          c+=`<div class="it" style="--c:${pc}"><span class="vn2">${v.vendor}</span> <span class="pq">${pl}</span></div>`});
+        c+='</td>';html+=c;
+      }else html+=`<td class="${isT.trim()}"><div class="dn"><span>${day}</span></div></td>`;
+    }html+='</tr>';}
+  html+='</table>';document.getElementById('calBox').innerHTML=html;
+}
+renderCal();
+document.getElementById('upd').textContent='생성일 '+now.toLocaleDateString('ko-KR');
+</script></body></html>
