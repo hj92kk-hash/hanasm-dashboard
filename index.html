@@ -44,6 +44,7 @@ h1{font-size:22px}
 .ttbl .ck{text-align:center;width:34px}
 .ttbl .qty{text-align:center;font-weight:800;width:46px}
 .ttbl .vn{font-weight:800;white-space:nowrap}
+.ttbl .tel{white-space:nowrap}
 .chip{display:inline-block;font-size:11px;font-weight:700;padding:2px 7px;border-radius:5px;color:#fff;white-space:nowrap}
 .none{color:#64748b;font-size:14px;padding:10px 2px}
 .legend{font-size:12px;color:#475569;margin-bottom:10px}
@@ -81,7 +82,22 @@ td.alldone{background:#f0fdf4}
 @media print{@page{size:A4 landscape;margin:8mm}body{background:#fff}.wrap{max-width:none;padding:0}
  #printbtn,.foot,.searchbox,.checkin{display:none}.panel{box-shadow:none}
  table.cal{height:165mm}table.cal td{height:auto}}
-@media(max-width:680px){table.cal td{height:auto;min-height:78px}.ttbl{font-size:12px}header{flex-direction:column}.hright{align-items:stretch;width:100%}.searchbox input{width:100%;max-width:none}}
+@media(max-width:680px){
+ table.cal td{height:auto;min-height:78px}
+ header{flex-direction:column}.hright{align-items:stretch;width:100%;justify-content:flex-start}.searchbox input{width:100%;max-width:none}
+ /* checklist -> cards */
+ .ttbl thead{display:none}
+ .ttbl,.ttbl tbody{display:block;width:100%}
+ .ttbl tr{display:block;border:1px solid #cbd5e1;border-radius:10px;margin-bottom:10px;padding:6px 4px;background:#fff}
+ .ttbl tr:nth-child(even) td{background:transparent}
+ .ttbl td{display:flex;gap:8px;border:none;padding:5px 10px;white-space:normal!important;font-size:13px;align-items:flex-start}
+ .ttbl td.tel{white-space:normal!important}
+ .ttbl td::before{content:attr(data-label);flex:0 0 58px;font-weight:700;color:#64748b}
+ .ttbl td.ck{display:none}
+ .ttbl td.vn{font-weight:800;white-space:normal}
+ .ttbl td.qty{text-align:left;width:auto}
+ .ttbl td[data-label='주소']{background:#f8fafc;border-radius:6px}
+}
 </style></head><body>
 <div class="wrap">
 <header>
@@ -145,10 +161,11 @@ function renderChecklist(key){
     let h='<table class="ttbl"><thead><tr><th class="ck">✓</th><th>상태</th><th>업체명</th><th>상품</th><th>사이즈</th><th class="qty">수량</th><th>배송</th><th>연락처</th><th>주소</th></tr></thead><tbody>';
     rows.forEach(r=>{const c=COL[r.product]||'#475569';
       const st=r.done?'<span class="stchip" style="background:#16a34a">출고완료</span>':'<span class="stchip" style="background:#dc2626">대기</span>';
-      h+='<tr class="'+(r.done?'done':'')+'"><td class="ck"><input type="checkbox"'+(r.done?' checked':'')+'></td><td>'+st+'</td><td class="vn">'+esc(r.vendor)+'</td>'+
-         '<td><span class="chip" style="background:'+c+'">'+esc(SHORT[r.product]||r.product)+'</span></td>'+
-         '<td>'+esc(r.size||'-')+'</td><td class="qty">'+esc(r.qty)+'</td><td>'+esc(r.ship||'-')+'</td>'+
-         '<td style="white-space:nowrap">'+esc(r.tel||'-')+'</td><td>'+esc(r.addr||'-')+'</td></tr>'});
+      h+='<tr class="'+(r.done?'done':'')+'"><td class="ck"><input type="checkbox"'+(r.done?' checked':'')+'></td>'+
+         '<td data-label="상태">'+st+'</td><td class="vn" data-label="업체">'+esc(r.vendor)+'</td>'+
+         '<td data-label="상품"><span class="chip" style="background:'+c+'">'+esc(SHORT[r.product]||r.product)+'</span></td>'+
+         '<td data-label="사이즈">'+esc(r.size||'-')+'</td><td class="qty" data-label="수량">'+esc(r.qty)+'</td><td data-label="배송">'+esc(r.ship||'-')+'</td>'+
+         '<td class="tel" data-label="연락처">'+esc(r.tel||'-')+'</td><td data-label="주소">'+esc(r.addr||'-')+'</td></tr>'});
     h+='</tbody></table>';
     document.getElementById('todayBox').innerHTML=h;
   }else document.getElementById('todayBox').innerHTML='<div class="none">'+M+'/'+D+' 출고 예정 건이 없습니다.</div>';
