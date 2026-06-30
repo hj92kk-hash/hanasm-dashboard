@@ -106,26 +106,26 @@ td.alldone{background:#f0fdf4}
 @media(max-width:680px){
  table.cal td{height:auto;min-height:78px}
  header{flex-direction:column}.hright{align-items:stretch;width:100%;justify-content:flex-start}.searchbox input{width:100%;max-width:none}
- /* checklist -> cards */
+ /* checklist: 한 줄 요약(업체/상품/수량), 탭하면 펼침 */
  .ttbl thead{display:none}
  .ttbl,.ttbl tbody{display:block;width:100%}
- .ttbl tr{display:block;border:1px solid #cbd5e1;border-radius:10px;margin-bottom:10px;padding:6px 4px;background:#fff}
+ .ttbl tr{display:flex;flex-wrap:wrap;align-items:center;gap:6px;border:1px solid #cbd5e1;border-radius:9px;margin-bottom:6px;padding:7px 10px;background:#fff;cursor:pointer}
  .ttbl tr:nth-child(even) td{background:transparent}
- .ttbl td{display:flex;gap:8px;border:none;padding:5px 10px;white-space:normal!important;font-size:13px;align-items:flex-start}
- .ttbl td.tel{white-space:normal!important}
- .ttbl td::before{content:attr(data-label);flex:0 0 58px;font-weight:700;color:#64748b}
+ .ttbl td{display:none;border:none;padding:0;font-size:13px;white-space:normal!important}
+ .ttbl td::before{display:none}
  .ttbl td.ck{display:none}
- .ttbl td.vn{font-weight:800;white-space:normal}
- .ttbl td.qty{text-align:left;width:auto}
- .ttbl td[data-label='주소']{background:#f8fafc;border-radius:6px}
- /* collapsed: show 업체/상품/수량만 */
- .ttbl td.detail{display:none}
- .ttbl tr.open td.detail{display:flex}
- .ttbl td[data-label='업체']::before,.ttbl td[data-label='상품']::before{display:none}
- .ttbl td.vn{cursor:pointer;font-size:15px;align-items:center}
- .ttbl td.vn::after{content:'▸ 상세';margin-left:auto;font-size:11px;color:#2563eb;font-weight:700}
- .ttbl tr.open td.vn::after{content:'▾ 닫기'}
- .ttbl tr{cursor:pointer}
+ /* summary line */
+ .ttbl td.vn{display:inline-flex;flex:1 1 auto;min-width:0;font-weight:800;font-size:14px;align-items:center;line-height:1.2}
+ .ttbl td[data-label='상품']{display:inline-flex;flex:0 0 auto;align-items:center}
+ .ttbl td.qty{display:inline-flex;flex:0 0 auto;font-weight:800;align-items:center}
+ .ttbl td.qty::before{content:'×';color:#64748b;margin-right:1px}
+ .ttbl td.qty::after{content:'▸';margin-left:8px;color:#2563eb;font-weight:800}
+ .ttbl tr.open td.qty::after{content:'▾'}
+ /* details when open */
+ .ttbl tr.open td.detail{display:flex;flex-basis:100%;width:100%;gap:8px;padding:3px 2px;font-size:13px;align-items:flex-start}
+ .ttbl tr.open td.detail::before{display:inline-block;content:attr(data-label);flex:0 0 52px;font-weight:700;color:#64748b}
+ .ttbl tr.open td.detail[data-label='상태']{margin-top:5px;border-top:1px dashed #e2e8f0;padding-top:7px}
+ .ttbl tr.open td[data-label='주소']{background:#f8fafc;border-radius:6px}
 }
 </style></head><body>
 <div class="wrap">
