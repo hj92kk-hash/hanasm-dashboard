@@ -33,6 +33,9 @@ h1{font-size:22px}
 .tabs{display:flex;gap:6px}
 .tab{font-size:12.5px;font-weight:700;border:1px solid #cbd5e1;background:#fff;color:#475569;border-radius:7px;padding:5px 12px;cursor:pointer}
 .tab.on{background:#1e293b;color:#fff;border-color:#1e293b}
+.srctabs{display:flex;gap:8px}
+.srctab{font-size:14px;font-weight:800;border:1.5px solid #cbd5e1;background:#fff;color:#475569;border-radius:9px;padding:7px 18px;cursor:pointer}
+.srctab.on{background:#2563eb;color:#fff;border-color:#2563eb}
 .datenav{display:flex;align-items:center;gap:6px;font-size:13px;color:#64748b}
 .datenav button{font-size:13px;font-weight:700;border:1px solid #cbd5e1;background:#fff;border-radius:6px;padding:4px 9px;cursor:pointer}
 .datenav button#todayBtn{background:#1e293b;color:#fff;border-color:#1e293b}
@@ -104,7 +107,7 @@ td.alldone{background:#f0fdf4}
 <div class="wrap">
 <header>
   <div><h1>게시판 출고 작업 대시보드</h1>
-  <div class="subt">출고일 기준 · 데이터: 게시판제작공정시트 · 자동 갱신 · 생성 __GEN__</div></div>
+  <div class="subt">출고일/납기일 기준 · 데이터: 게시판제작공정시트 · 자동 갱신 · 생성 __GEN__</div><div class="srctabs" id="srcTabs" style="margin-top:8px"></div></div>
   <div class="hright">
     <div class="searchbox">
       <input id="search" type="text" placeholder="🔍 업체명 검색 → 출고일 확인" autocomplete="off">
@@ -138,8 +141,10 @@ td.alldone{background:#f0fdf4}
 <div class="ovl" id="nameOvl" style="display:none"><div class="modal"><h2>👋 확인자 이름을 입력하세요</h2><p><span class="dev" id="mDev"></span> 로 접속하셨습니다. 출고 확인 담당자 이름을 선택하거나 입력해 주세요.</p><input class="ni" id="mInput" type="text" placeholder="직접 입력 (예: 홍길동)"><button class="ok" id="mOk">확인하고 시작</button></div></div>
 </div>
 <script>
-const AGG=__AGG__;
-const DET=__DET__;
+const SOURCES=__SOURCES__;
+const ORDER=__ORDER__;
+let curSrc=ORDER[0];
+let AGG=SOURCES[curSrc].agg, DET=SOURCES[curSrc].det;
 const COL={'슬림디자인게시판':'#2563eb','슬림업게시판':'#059669','강화유리게시판':'#7c3aed','인포메이션':'#d97706'};
 const SHORT={'슬림디자인게시판':'슬림디자인','슬림업게시판':'슬림업','강화유리게시판':'강화유리','인포메이션':'인포'};
 const TEAM=[];
@@ -181,8 +186,9 @@ document.getElementById('datePick').onchange=function(){if(this.value)renderChec
 renderChecklist(todayKey);
 
 // ---- vendor index for search ----
-const VEND={}; // vendor -> [{date,qty}]
-Object.keys(DET).forEach(k=>{DET[k].forEach(r=>{(VEND[r.vendor]=VEND[r.vendor]||[]).push({date:k,qty:+r.qty||0})})});
+let VEND={};
+function buildVendorIndex(){VEND={};Object.keys(DET).forEach(k=>{DET[k].forEach(r=>{(VEND[r.vendor]=VEND[r.vendor]||[]).push({date:k,qty:+r.qty||0})})})}
+buildVendorIndex();
 const sEl=document.getElementById('search'),sRes=document.getElementById('sresults');
 function fmt(d){const[y,m,dd]=d.split('-');return +m+'/'+dd+' ('+WK[new Date(+y,+m-1,+dd).getDay()]+')'}
 sEl.addEventListener('input',()=>{
@@ -238,13 +244,18 @@ renderCheckin();
 })();
 
 // ---- calendar ----
-const keys=Object.keys(AGG).sort();
-const months=[...new Set(keys.map(k=>k.slice(0,7)))];
+let months=[],curMonth=todayKey.slice(0,7);
 const mt=document.getElementById('monthTabs');
-let curMonth=months.includes(todayKey.slice(0,7))?todayKey.slice(0,7):(months[months.length-1]||todayKey.slice(0,7));
-months.forEach(m=>{const mm=+m.split('-')[1];const b=document.createElement('button');b.className='tab';b.dataset.m=m;b.textContent=mm+'월';b.onclick=()=>{curMonth=m;syncTabs();renderCal()};mt.appendChild(b)});
+function buildMonthTabs(){
+  const keys=Object.keys(AGG).sort();
+  months=[...new Set(keys.map(k=>k.slice(0,7)))];
+  curMonth=months.includes(todayKey.slice(0,7))?todayKey.slice(0,7):(months[months.length-1]||todayKey.slice(0,7));
+  mt.innerHTML='';
+  months.forEach(m=>{const mm=+m.split('-')[1];const b=document.createElement('button');b.className='tab';b.dataset.m=m;b.textContent=mm+'월';b.onclick=()=>{curMonth=m;syncTabs();renderCal()};mt.appendChild(b)});
+  syncTabs();
+}
 function syncTabs(){[...mt.children].forEach(c=>c.classList.toggle('on',c.dataset.m===curMonth))}
-syncTabs();
+buildMonthTabs();
 function renderCal(hlDate){
   const[y,m]=curMonth.split('-').map(Number);
   const first=new Date(y,m-1,1),dim=new Date(y,m,0).getDate();
@@ -268,4 +279,12 @@ function renderCal(hlDate){
   html+='</table>';document.getElementById('calBox').innerHTML=html;
 }
 renderCal();
+
+// ---- source switch (게시판/오뚜기) ----
+const st=document.getElementById('srcTabs');
+function renderSrcTabs(){st.innerHTML=ORDER.map(k=>'<button class="srctab'+(k===curSrc?' on':'')+'" data-k="'+k+'">'+SOURCES[k].label+'</button>').join('');
+  [...st.children].forEach(b=>b.onclick=()=>switchSrc(b.dataset.k));}
+function switchSrc(k){if(k===curSrc||!SOURCES[k])return;curSrc=k;AGG=SOURCES[k].agg;DET=SOURCES[k].det;
+  buildVendorIndex();buildMonthTabs();renderChecklist(DET[todayKey]?todayKey:todayKey);renderCal();renderSrcTabs();}
+renderSrcTabs();
 </script></body></html>
