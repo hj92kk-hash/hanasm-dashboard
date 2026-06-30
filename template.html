@@ -63,6 +63,7 @@ td.today{outline:3px solid #dc2626;outline-offset:-3px}
 td.hl{background:#fff7d6}
 .dn{font-size:14px;font-weight:800;color:#334155;border-bottom:1px solid #e2e8f0;padding-bottom:3px;margin-bottom:4px;display:flex;justify-content:space-between;align-items:center}
 .cnt{font-size:11px;font-weight:800;background:#1e293b;color:#fff;border-radius:9px;padding:1px 9px}
+.srccnt{font-size:10.5px;font-weight:800;white-space:nowrap}
 .it{font-size:10.5px;line-height:1.32;margin-bottom:3px;padding-left:10px;position:relative}
 .it.hl{background:#fde68a;border-radius:3px}
 .it::before{content:'';position:absolute;left:0;top:4px;width:6px;height:6px;border-radius:1px;background:var(--c)}
@@ -271,8 +272,10 @@ function renderCal(hlDate){
       if(!day){html+='<td class="empty"></td>';continue}
       const key=y+'-'+pad(m)+'-'+pad(day);const cls=(key===todayKey?'today ':'')+(key===hlDate?'hl':'');
       if(AGG[key]){const d=AGG[key];const tdcls=(cls+(d.all_done?' alldone':'')).trim();
-        let badge=d.all_done?'<span class="donebadge">✓완료</span>':(d.done>0?'<span class="partbadge">완료 '+d.done+'/'+d.total+'</span>':'');
-        let c='<td class="'+tdcls+'"><div class="dn"><span>'+day+'</span><span>'+badge+'<span class="cnt">'+d.total+'건</span></span></div>';
+        let badge=d.all_done?'<span class="donebadge">✓완료</span>':'';
+        const sc=d.src||{};
+        const scStr=Object.keys(sc).map(k=>'<span style="color:'+(SRCCOL[k]||'#334155')+'">'+k+' '+sc[k]+'</span>').join(' / ');
+        let c='<td class="'+tdcls+'"><div class="dn"><span>'+day+'</span><span>'+badge+'<span class="srccnt">'+scStr+'</span></span></div>';
         d.vendors.forEach(v=>{const pc=COL[v.products[0].name]||'#475569';const pl=v.products.map(p=>(SHORT[p.name]||p.name)+'<b>'+p.qty+'</b>').join(' ');
           const st=v.src?'<span class="srctag" style="background:'+(SRCCOL[v.src]||'#64748b')+'">'+esc(v.src[0])+'</span>':'';
           c+='<div class="it'+(v.done?' done':'')+'" style="--c:'+pc+'">'+st+'<span class="vn2">'+esc(v.vendor)+'</span> <span class="pq">'+pl+'</span></div>'});
