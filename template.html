@@ -1,0 +1,191 @@
+<!DOCTYPE html>
+<html lang="ko"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>게시판 출고 대시보드 | 하나사인몰</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:-apple-system,'Malgun Gothic','맑은 고딕',sans-serif;color:#0f172a;background:#eef1f5}
+.wrap{max-width:1180px;margin:0 auto;padding:18px 16px 60px}
+header{display:flex;justify-content:space-between;align-items:flex-start;flex-wrap:wrap;gap:12px;margin-bottom:14px}
+h1{font-size:22px}
+.subt{font-size:12px;color:#64748b;margin-top:3px}
+.hright{display:flex;flex-direction:column;align-items:flex-end;gap:8px}
+.searchbox{position:relative}
+.searchbox input{width:240px;max-width:60vw;font-size:13px;padding:8px 12px;border:1px solid #cbd5e1;border-radius:8px;outline:none}
+.searchbox input:focus{border-color:#1e293b}
+.sresults{position:absolute;right:0;top:40px;width:330px;max-width:80vw;background:#fff;border:1px solid #cbd5e1;border-radius:10px;box-shadow:0 6px 20px rgba(0,0,0,.15);z-index:30;max-height:320px;overflow:auto;display:none}
+.sresults.on{display:block}
+.sr{padding:9px 12px;border-bottom:1px solid #f1f5f9;cursor:pointer}
+.sr:hover{background:#f8fafc}
+.sr .v{font-weight:800;font-size:13px}
+.sr .d{font-size:12px;color:#475569;margin-top:2px}
+.sr .d b{color:#dc2626}
+.sr.none{color:#94a3b8;cursor:default;font-size:13px}
+.btn{font-size:13px;font-weight:700;border:none;border-radius:8px;padding:8px 14px;cursor:pointer;background:#1e293b;color:#fff}
+.checkin{display:flex;align-items:center;gap:7px;font-size:12px;background:#fff;border:1px solid #cbd5e1;border-radius:8px;padding:6px 9px}
+.checkin .dev{font-weight:800}
+.checkin select,.checkin input{font-size:12px;border:1px solid #cbd5e1;border-radius:6px;padding:4px 6px}
+.checkin .last{color:#64748b}
+.panel{background:#fff;border-radius:12px;padding:16px 18px;box-shadow:0 1px 4px rgba(0,0,0,.07);margin-bottom:18px}
+.ptitle{font-size:16px;font-weight:800;margin-bottom:12px;display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap}
+.tabs{display:flex;gap:6px}
+.tab{font-size:12.5px;font-weight:700;border:1px solid #cbd5e1;background:#fff;color:#475569;border-radius:7px;padding:5px 12px;cursor:pointer}
+.tab.on{background:#1e293b;color:#fff;border-color:#1e293b}
+#todayPanel{border:2px solid #dc2626}
+.tbadge{font-size:12px;font-weight:800;background:#dc2626;color:#fff;border-radius:7px;padding:3px 10px}
+.ttbl{width:100%;border-collapse:collapse;font-size:13px}
+.ttbl th{background:#1e293b;color:#fff;text-align:left;padding:8px 9px;font-size:12px;white-space:nowrap}
+.ttbl td{padding:8px 9px;border-bottom:1px solid #e8edf3;vertical-align:top}
+.ttbl tr:nth-child(even) td{background:#f8fafc}
+.ttbl .ck{text-align:center;width:34px}
+.ttbl .qty{text-align:center;font-weight:800;width:46px}
+.ttbl .vn{font-weight:800;white-space:nowrap}
+.chip{display:inline-block;font-size:11px;font-weight:700;padding:2px 7px;border-radius:5px;color:#fff;white-space:nowrap}
+.none{color:#64748b;font-size:14px;padding:10px 2px}
+.legend{font-size:12px;color:#475569;margin-bottom:10px}
+.legend span{margin-right:13px;white-space:nowrap}
+.legend i{display:inline-block;width:11px;height:11px;border-radius:2px;vertical-align:-1px;margin-right:4px}
+table.cal{width:100%;border-collapse:collapse;table-layout:fixed}
+table.cal th{background:#1e293b;color:#fff;font-size:13px;padding:6px 0;border:1px solid #1e293b}
+table.cal td{border:1.2px solid #94a3b8;vertical-align:top;width:20%;height:118px;padding:4px 6px;overflow:hidden}
+td.empty{background:#f8fafc}
+td.today{outline:3px solid #dc2626;outline-offset:-3px}
+td.hl{background:#fff7d6}
+.dn{font-size:14px;font-weight:800;color:#334155;border-bottom:1px solid #e2e8f0;padding-bottom:3px;margin-bottom:4px;display:flex;justify-content:space-between;align-items:center}
+.cnt{font-size:11px;font-weight:800;background:#1e293b;color:#fff;border-radius:9px;padding:1px 9px}
+.it{font-size:10.5px;line-height:1.32;margin-bottom:3px;padding-left:10px;position:relative}
+.it.hl{background:#fde68a;border-radius:3px}
+.it::before{content:'';position:absolute;left:0;top:4px;width:6px;height:6px;border-radius:1px;background:var(--c)}
+.vn2{font-weight:800}.pq{color:#475569}.pq b{color:#0f172a;font-weight:800}
+.foot{font-size:11px;color:#94a3b8;text-align:center;margin-top:14px}
+@media print{@page{size:A4 landscape;margin:8mm}body{background:#fff}.wrap{max-width:none;padding:0}
+ #printbtn,.foot,.searchbox,.checkin{display:none}.panel{box-shadow:none}
+ table.cal{height:165mm}table.cal td{height:auto}}
+@media(max-width:680px){table.cal td{height:auto;min-height:78px}.ttbl{font-size:12px}header{flex-direction:column}.hright{align-items:stretch;width:100%}.searchbox input{width:100%;max-width:none}}
+</style></head><body>
+<div class="wrap">
+<header>
+  <div><h1>게시판 출고 작업 대시보드</h1>
+  <div class="subt">출고일 기준 · 데이터: 게시판제작공정시트 · 자동 갱신 · 생성 __GEN__</div></div>
+  <div class="hright">
+    <div class="searchbox">
+      <input id="search" type="text" placeholder="🔍 업체명 검색 → 출고일 확인" autocomplete="off">
+      <div class="sresults" id="sresults"></div>
+    </div>
+    <div style="display:flex;gap:8px;align-items:center">
+      <div class="checkin" id="checkin"></div>
+      <button class="btn" id="printbtn" onclick="window.print()">🖨 A4 인쇄</button>
+    </div>
+  </div>
+</header>
+
+<div class="panel" id="todayPanel">
+  <div class="ptitle"><span>✅ 오늘 출고 체크리스트 <span class="tbadge" id="todayDate"></span></span>
+     <span id="todaySum" style="font-size:13px;color:#64748b"></span></div>
+  <div id="todayBox"></div>
+</div>
+
+<div class="panel">
+  <div class="ptitle"><span>출고 달력 (월~금)</span><div class="tabs" id="monthTabs"></div></div>
+  <div class="legend"><span><i style="background:#2563eb"></i>슬림디자인</span><span><i style="background:#059669"></i>슬림업</span><span><i style="background:#7c3aed"></i>강화유리</span><span><i style="background:#d97706"></i>인포</span></div>
+  <div id="calBox"></div>
+</div>
+<div class="foot">하나사인몰 웹팀 · 자동 생성 대시보드</div>
+</div>
+<script>
+const AGG=__AGG__;
+const DET=__DET__;
+const COL={'슬림디자인게시판':'#2563eb','슬림업게시판':'#059669','강화유리게시판':'#7c3aed','인포메이션':'#d97706'};
+const SHORT={'슬림디자인게시판':'슬림디자인','슬림업게시판':'슬림업','강화유리게시판':'강화유리','인포메이션':'인포'};
+const TEAM=['박상준','황국인','김은혜','홍재이','임정민'];
+function pad(n){return String(n).padStart(2,'0')}
+function esc(s){return String(s).replace(/[&<>]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;'}[c]))}
+const now=new Date();
+const todayKey=now.getFullYear()+'-'+pad(now.getMonth()+1)+'-'+pad(now.getDate());
+const WK=['일','월','화','수','목','금','토'];
+
+// ---- TODAY ----
+document.getElementById('todayDate').textContent=(now.getMonth()+1)+'/'+now.getDate()+' ('+WK[now.getDay()]+')';
+const rows=DET[todayKey]||[];
+const tq=rows.reduce((s,r)=>s+(+r.qty||0),0);
+if(rows.length){
+  document.getElementById('todaySum').textContent='총 '+rows.length+'건 · '+tq+'개';
+  let h='<table class="ttbl"><thead><tr><th class="ck">✓</th><th>업체명</th><th>상품</th><th>사이즈</th><th class="qty">수량</th><th>배송</th><th>연락처</th><th>주소</th></tr></thead><tbody>';
+  rows.forEach(r=>{const c=COL[r.product]||'#475569';
+    h+='<tr><td class="ck"><input type="checkbox"></td><td class="vn">'+esc(r.vendor)+'</td>'+
+       '<td><span class="chip" style="background:'+c+'">'+esc(SHORT[r.product]||r.product)+'</span></td>'+
+       '<td>'+esc(r.size||'-')+'</td><td class="qty">'+esc(r.qty)+'</td><td>'+esc(r.ship||'-')+'</td>'+
+       '<td style="white-space:nowrap">'+esc(r.tel||'-')+'</td><td>'+esc(r.addr||'-')+'</td></tr>'});
+  h+='</tbody></table>';
+  document.getElementById('todayBox').innerHTML=h;
+}else document.getElementById('todayBox').innerHTML='<div class="none">오늘('+todayKey+') 출고 예정 건이 없습니다.</div>';
+
+// ---- vendor index for search ----
+const VEND={}; // vendor -> [{date,qty}]
+Object.keys(DET).forEach(k=>{DET[k].forEach(r=>{(VEND[r.vendor]=VEND[r.vendor]||[]).push({date:k,qty:+r.qty||0})})});
+const sEl=document.getElementById('search'),sRes=document.getElementById('sresults');
+function fmt(d){const[y,m,dd]=d.split('-');return +m+'/'+dd+' ('+WK[new Date(+y,+m-1,+dd).getDay()]+')'}
+sEl.addEventListener('input',()=>{
+  const q=sEl.value.trim();if(!q){sRes.classList.remove('on');return}
+  const hits=Object.keys(VEND).filter(v=>v.includes(q)).slice(0,30);
+  if(!hits.length){sRes.innerHTML='<div class="sr none">검색 결과 없음</div>';sRes.classList.add('on');return}
+  sRes.innerHTML=hits.map(v=>{
+    const byDate={};VEND[v].forEach(x=>byDate[x.date]=(byDate[x.date]||0)+x.qty);
+    const ds=Object.keys(byDate).sort().map(d=>'<b>'+fmt(d)+'</b> '+byDate[d]+'개').join(' · ');
+    return '<div class="sr" data-d="'+Object.keys(byDate).sort()[0]+'"><div class="v">'+esc(v)+'</div><div class="d">출고일: '+ds+'</div></div>';
+  }).join('');
+  sRes.classList.add('on');
+  [...sRes.querySelectorAll('.sr[data-d]')].forEach(el=>el.onclick=()=>{
+    const d=el.getAttribute('data-d');const mk=d.slice(0,7);
+    if(months.includes(mk)){curMonth=mk;syncTabs();renderCal(d)}
+    sRes.classList.remove('on');sEl.value='';
+  });
+});
+document.addEventListener('click',e=>{if(!e.target.closest('.searchbox'))sRes.classList.remove('on')});
+
+// ---- check-in (담당자 이름) ----
+const isMobile=/Mobi|Android|iPhone|iPad|iPod/i.test(navigator.userAgent);
+const devKey=isMobile?'mobile':'pc', devLabel=isMobile?'📱 모바일':'💻 PC';
+function renderCheckin(){
+  const saved=JSON.parse(localStorage.getItem('checkin_'+devKey)||'null');
+  let opts='<option value="">담당자 선택</option>'+TEAM.map(n=>'<option'+(saved&&saved.name===n?' selected':'')+'>'+n+'</option>').join('');
+  let last=saved?('<span class="last">· 최근 '+saved.time+'</span>'):'';
+  document.getElementById('checkin').innerHTML='<span class="dev">'+devLabel+' 확인자</span><select id="ciSel">'+opts+'</select>'+last;
+  document.getElementById('ciSel').onchange=function(){
+    if(!this.value)return;
+    const rec={name:this.value,time:(now.getMonth()+1)+'/'+now.getDate()+' '+pad(now.getHours())+':'+pad(now.getMinutes())};
+    localStorage.setItem('checkin_'+devKey,JSON.stringify(rec));renderCheckin();
+  };
+}
+renderCheckin();
+
+// ---- calendar ----
+const keys=Object.keys(AGG).sort();
+const months=[...new Set(keys.map(k=>k.slice(0,7)))];
+const mt=document.getElementById('monthTabs');
+let curMonth=months.includes(todayKey.slice(0,7))?todayKey.slice(0,7):(months[months.length-1]||todayKey.slice(0,7));
+months.forEach(m=>{const mm=+m.split('-')[1];const b=document.createElement('button');b.className='tab';b.dataset.m=m;b.textContent=mm+'월';b.onclick=()=>{curMonth=m;syncTabs();renderCal()};mt.appendChild(b)});
+function syncTabs(){[...mt.children].forEach(c=>c.classList.toggle('on',c.dataset.m===curMonth))}
+syncTabs();
+function renderCal(hlDate){
+  const[y,m]=curMonth.split('-').map(Number);
+  const first=new Date(y,m-1,1),dim=new Date(y,m,0).getDate();
+  let cells=[],startW=(first.getDay()+6)%7;
+  for(let i=0;i<startW;i++)cells.push(0);
+  for(let d=1;d<=dim;d++)cells.push(d);
+  while(cells.length%7)cells.push(0);
+  let html='<table class="cal"><tr>'+['월','화','수','목','금'].map(d=>'<th>'+d+'</th>').join('')+'</tr>';
+  for(let w=0;w<cells.length/7;w++){html+='<tr>';
+    for(let i=0;i<5;i++){const day=cells[w*7+i];
+      if(!day){html+='<td class="empty"></td>';continue}
+      const key=y+'-'+pad(m)+'-'+pad(day);const cls=(key===todayKey?'today ':'')+(key===hlDate?'hl':'');
+      if(AGG[key]){const d=AGG[key];let c='<td class="'+cls.trim()+'"><div class="dn"><span>'+day+'</span><span class="cnt">'+d.total+'건</span></div>';
+        d.vendors.forEach(v=>{const pc=COL[v.products[0].name]||'#475569';const pl=v.products.map(p=>(SHORT[p.name]||p.name)+'<b>'+p.qty+'</b>').join(' ');
+          c+='<div class="it" style="--c:'+pc+'"><span class="vn2">'+esc(v.vendor)+'</span> <span class="pq">'+pl+'</span></div>'});
+        c+='</td>';html+=c;
+      }else html+='<td class="'+cls.trim()+'"><div class="dn"><span>'+day+'</span></div></td>';
+    }html+='</tr>';}
+  html+='</table>';document.getElementById('calBox').innerHTML=html;
+}
+renderCal();
+</script></body></html>
